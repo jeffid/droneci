@@ -1,0 +1,14 @@
+# .drone.yml
+kind: pipeline
+name: default
+
+steps:
+  - name: test
+    image: golang:1.18
+    commands:
+      - go test
+
+  - name: build
+    image: golang:1.18
+    commands:
+      - go build

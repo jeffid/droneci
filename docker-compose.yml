@@ -1,0 +1,84 @@
+version: "3.7"
+
+# 创建自定义网络
+networks:
+  drone:
+    # external: false
+    driver: bridge
+
+services:
+#  # 数据库服务
+#  db:
+#    image: postgres:latest
+#    container_name: drone_db
+#    restart: always
+#    networks:
+#      - drone # 加入到drone网络
+#    ports:
+#      - "8081:5432" # 8081为容器暴露到服务器的端口，5432为容器内改应用的端口
+#    environment:
+#      - POSTGRES_USER=username # PGSQL默认用户名
+#      - POSTGRES_PASSWORD=password # PGSQL默认密码
+#      - POSTGRES_DB=db_name # PGSQL默认数据库的名字
+#    volumes:
+#      - ~/app/vol/drone/db:/var/lib/postgresql/data # 数据卷，前者为服务器真实位置，后者为改应用在容器内的位置
+
+  # Drone Server 服务
+  server:
+    image: drone/drone:latest # 最新为2
+    container_name: drone_server
+    restart: always
+    networks:
+      - drone # 加入到drone网络
+    ports:
+      - "8850:80"
+      - "8853:443"
+    environment:
+      - DRONE_SERVER_PROTO=http # 访问协议，创建webHooks和重定向
+#      - DRONE_SERVER_HOST=drone.tt # 主机名称，创建webHooks和重定向
+      - DRONE_SERVER_HOST=drone.frp.waacoo.cc # 主机名称，创建webHooks和重定向; 如果主机名与仓库设置的` OAuth2 应用程序 > 重定向 URI`不一致,则授权页面报错
+      - DRONE_RPC_SECRET=b4fbca0826072158fef1fecc8221ad03 # 与 drone runner 通讯的密钥
+      - DRONE_USER_CREATE=root:admin123,admin:true # 管理员账户
+#      - DRONE_DATABASE_DRIVER=postgres # 数据库类型
+#      - DRONE_DATABASE_DATASOURCE=postgres://username:password@db/db_name?sslmode=disable # 数据库连接
+      - DRONE_GIT_ALWAYS_AUTH=true # 使用 oauth 身份验证信息拉取代码
+#      - DRONE_GITEA_SERVER=https://d585-163-142-56-20.ap.ngrok.io/
+#      - DRONE_GITEA_SERVER=http://gitea.tt # 协议名不能缺省
+#      - DRONE_GITEA_CLIENT_ID=a8b4283d-4074-443f-86c6-c7c9f94084c5 # GITEA 客户端 id
+#      - DRONE_GITEA_CLIENT_SECRET=gto_d75dzbm5shx2ofaykyib7shyxbbogpbubbh6bxwiz3oyl3hmbg5a # GITEE 客户端 密钥
+      - DRONE_GITEA_SERVER=http://gitea.waacoo.cc # 协议名不能缺省
+      - DRONE_GITEA_CLIENT_ID=0774e390-5253-4b09-b239-17e62031f3fb # GITEA 客户端 id
+      - DRONE_GITEA_CLIENT_SECRET=gto_zdcw6uxsm2jcx2g7jt46ro2ftqsiqxzn65ufp2kcdxheskvtijpq # GITEE 客户端 密钥
+#      - DRONE_GITEA_SKIP_VERIFY=false # 禁用 GITEA 链接时 tls 验证
+#      - DRONE_GITEE_CLIENT_ID=a8b4283d-4074-443f-86c6-c7c9f94084c5 # GITEE 客户端 id
+#      - DRONE_GITEE_CLIENT_SECRET=gto_erbeg2ej7e7vose6p4ryk2t6whe5go5wyhulavvmazlqzebwtwsa # GITEE 客户端 密钥
+#      - DRONE_GITEE_SKIP_VERIFY=false # 禁用 GITEE 链接时 tls 验证
+    volumes:
+      - ~/app/vol/drone/server:/data
+      - /var/run/docker.sock:/var/run/docker.sock
+#    depends_on:
+#      - db
+
+  # Drone Docker Runner
+  runner:
+    image: drone/drone-runner-docker:latest # 目前drone-runner-docker最新版本为 1.8.0
+    container_name: drone_runner
+    restart: always
+    networks:
+      - drone # 加入到drone网络
+    ports:
+      - "8855:3000"
+    environment:
+      - DRONE_RUNNER_NAME=drone-runner
+      - DRONE_RUNNER_CAPACITY=4 # 限制runner可执行的并发管道数量
+      - DRONE_RPC_PROTO=http # 访问drone server 协议
+#      - DRONE_RPC_HOST=drone.tt # 访问drone server 服务器地址
+      - DRONE_RPC_HOST=drone_server # 访问drone server 服务器地址
+      - DRONE_RPC_SECRET=b4fbca0826072158fef1fecc8221ad03 # 与 drone server 通讯的密钥
+      - DRONE_UI_USERNAME=username # Drone Runner 的 UI 用户账号
+      - DRONE_UI_PASSWORD=password # Drone Runner 的 UI 用户密码
+      # - DRONE_RUNNER_NETWORKS=drone_net
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+    depends_on:
+      - server
