@@ -1,6 +1,17 @@
 # .drone.yml
+
 kind: pipeline
+type: docker # 不能缺省
 name: default
+
+platform:
+  arch: amd64
+
+#workspace:
+#  path: /drone/src
+
+clone:
+  retries: 3
 
 steps:
   - name: test
@@ -11,4 +22,51 @@ steps:
   - name: build
     image: golang:1.18
     commands:
-      - go build
+      - pwd
+      - ls -lpah
+      - go build -o droneci .
+      - ./droneci
+    when:
+      branch:
+        - main
+
+# https://docs.drone.io/pipeline/docker/syntax/services/
+services:
+  - name: redis
+    image: redis:7
+#    environment:
+
+# https://docs.drone.io/pipeline/docker/syntax/trigger/
+trigger:
+  event:
+    - push
+#  branch:
+#    - main
+
+---
+kind: pipeline
+type: docker
+name: after
+
+steps:
+  - name: echo
+    image: golang:1.18
+    commands:
+      - go run after/main.go
+
+  - name: send
+    image: plugins/webhook # https://plugins.drone.io/plugins/webhook
+    settings:
+      username:
+        from_secret: username
+      password: mypassword
+      urls: https://httpbin.org/anything
+      content_type: application/json
+      template: |
+        {
+          "owner": "{{ repo.owner }}",
+          "repo": "{{ repo.name }}",
+          "status": "{{ build.status }}",
+        }
+depends_on:
+  - default
