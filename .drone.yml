@@ -17,7 +17,8 @@ steps:
   - name: test
     image: golang:1.18
     commands:
-      - go test
+      - go env -w GOPROXY=https://goproxy.cn,direct
+      - go test -test.v
 
   - name: build
     image: golang:1.18
