@@ -27,7 +27,7 @@ services:
   server:
     image: drone/drone:latest # 最新为2
     container_name: drone_server
-    restart: always
+#    restart: always
     networks:
       - drone # 加入到drone网络
     ports:
@@ -38,11 +38,15 @@ services:
 #      - DRONE_SERVER_HOST=drone.tt # 主机名称，创建webHooks和重定向
       - DRONE_SERVER_HOST=drone.frp.waacoo.cc # 主机名称，创建webHooks和重定向; 如果主机名与仓库设置的` OAuth2 应用程序 > 重定向 URI`不一致,则授权页面报错
       - DRONE_RPC_SECRET=b4fbca0826072158fef1fecc8221ad03 # 与 drone runner 通讯的密钥
-      - DRONE_USER_CREATE=root:admin123,admin:true # 管理员账户
+#      - DRONE_USER_CREATE=username:root,admin:true # 管理员账户; 创建一个管理员账号，该账号需要在Gitea中注册好。
+      - DRONE_USER_CREATE=username:root,machine:false,admin:true,token:55f24eb3d61ef6ac5e83d550178638dc # 管理员账户; 创建一个管理员账号，该账号需要在Gitea中注册好。
 #      - DRONE_DATABASE_DRIVER=postgres # 数据库类型
 #      - DRONE_DATABASE_DATASOURCE=postgres://username:password@db/db_name?sslmode=disable # 数据库连接
+      - DRONE_DATABASE_DRIVER=mysql # 数据库类型
+      # 数据库账号非管理员时报错`{"error":"Error 1419: You do not have the SUPER privilege and binary logging is enabled (you *might* want to use the less safe log_bin_trust_function_creators variable)","level":"fatal","msg":"main: cannot initialize server","time":"2022-10-05T01:49:42Z"}`
+#      - DRONE_DATABASE_DATASOURCE=drone:drone123@tcp(host.docker.internal:3306)/drone?parseTime=true # 数据库连接
+      - DRONE_DATABASE_DATASOURCE=root:devdev2020@tcp(host.docker.internal:3306)/drone?parseTime=true # 数据库连接
       - DRONE_GIT_ALWAYS_AUTH=true # 使用 oauth 身份验证信息拉取代码
-#      - DRONE_GITEA_SERVER=https://d585-163-142-56-20.ap.ngrok.io/
 #      - DRONE_GITEA_SERVER=http://gitea.tt # 协议名不能缺省
 #      - DRONE_GITEA_CLIENT_ID=a8b4283d-4074-443f-86c6-c7c9f94084c5 # GITEA 客户端 id
 #      - DRONE_GITEA_CLIENT_SECRET=gto_d75dzbm5shx2ofaykyib7shyxbbogpbubbh6bxwiz3oyl3hmbg5a # GITEE 客户端 密钥
@@ -63,7 +67,7 @@ services:
   runner:
     image: drone/drone-runner-docker:latest # 目前drone-runner-docker最新版本为 1.8.0
     container_name: drone_runner
-    restart: always
+#    restart: always
     networks:
       - drone # 加入到drone网络
     ports:

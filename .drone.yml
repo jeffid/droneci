@@ -22,6 +22,9 @@ steps:
 
   - name: build
     image: golang:1.18
+    volumes:
+      - name: cache
+        path: /tmp/cache
     commands:
       - pwd
       - ls -lpah
@@ -44,6 +47,11 @@ trigger:
 #  branch:
 #    - main
 
+volumes:
+  - name: cache
+    host:
+      path: /var/lib/cache
+
 ---
 kind: pipeline
 type: docker
@@ -61,7 +69,8 @@ steps:
       username:
         from_secret: username
       password: mypassword
-      urls: https://httpbin.org/anything
+#      urls: https://httpbin.org/anything
+      urls: https://pai.frp.waacoo.cc/t/t
       content_type: application/json
       template: |
         {
