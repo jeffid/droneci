@@ -76,7 +76,7 @@ steps:
         {
           "owner": "{{ repo.owner }}",
           "repo": "{{ repo.name }}",
-          "status": "{{ build.status }}",
+          "status": "{{ build.status }}"
         }
 depends_on:
   - default
