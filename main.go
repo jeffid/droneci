@@ -5,7 +5,7 @@ import (
 )
 
 func main() {
-	fmt.Println("Hello GitHub Actions!")
+	fmt.Println("Hello Drone!")
 }
 
 func Echo() {

@@ -13,13 +13,13 @@ func TestEcho(t *testing.T) {
 }
 
 func TestRedis(t *testing.T) {
-	ctx:=context.Background()
+	ctx := context.Background()
 	rdb := redis.NewClient(&redis.Options{
 		Addr:     "redis:6379",
 		Password: "", // no password set
 		DB:       0,  // use default DB
 	})
 
-	res:=rdb.Incr(ctx,"after")
-	fmt.Println("redis res: ",*res)
+	res := rdb.Incr(ctx, "after")
+	fmt.Println("redis res: ", *res)
 }
