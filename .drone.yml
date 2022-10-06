@@ -1,5 +1,3 @@
-# .drone.yml
-
 kind: pipeline
 type: docker # 不能缺省
 name: default
@@ -63,14 +61,16 @@ steps:
     commands:
       - go run after/main.go
 
-  - name: send
+  - name: webhook
     image: plugins/webhook # https://plugins.drone.io/plugins/webhook
     settings:
       username:
-        from_secret: username
-      password: mypassword
+        from_secret: webhook_username
+      password:
+        from_secret: webhook_password
 #      urls: https://httpbin.org/anything
-      urls: https://pai.frp.waacoo.cc/t/t
+      urls:
+        from_secret: webhook_urls
       content_type: application/json
       template: |
         {
@@ -81,4 +81,7 @@ steps:
 depends_on:
   - default
 
-#
+# "Authorization": "Basic am9qbzpteXBhc3N3b3Jk"
+# Authorization: Basic base64encode(username+":"+password)
+# am9qbzpteXBhc3N3b3Jk => jojo:mypassword
+#{"owner":"root","repo":"droneci","status":"success"}

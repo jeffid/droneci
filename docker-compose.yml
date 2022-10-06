@@ -25,7 +25,7 @@ services:
 
   # Drone Server 服务
   server:
-    image: drone/drone:latest # 最新为2
+    image: drone/drone:2.13 # https://hub.docker.com/r/drone/drone/tags
     container_name: drone_server
 #    restart: always
     networks:
@@ -35,28 +35,20 @@ services:
       - "8853:443"
     environment:
       - DRONE_SERVER_PROTO=http # 访问协议，创建webHooks和重定向
-#      - DRONE_SERVER_HOST=drone.tt # 主机名称，创建webHooks和重定向
-      - DRONE_SERVER_HOST=drone.frp.waacoo.cc # 主机名称，创建webHooks和重定向; 如果主机名与仓库设置的` OAuth2 应用程序 > 重定向 URI`不一致,则授权页面报错
-      - DRONE_RPC_SECRET=b4fbca0826072158fef1fecc8221ad03 # 与 drone runner 通讯的密钥
-#      - DRONE_USER_CREATE=username:root,admin:true # 管理员账户; 创建一个管理员账号，该账号需要在Gitea中注册好。
-      - DRONE_USER_CREATE=username:root,machine:false,admin:true,token:55f24eb3d61ef6ac5e83d550178638dc # 管理员账户; 创建一个管理员账号，该账号需要在Gitea中注册好。
+      - DRONE_SERVER_HOST=${DRONE_SERVER_HOST} # 主机名称, 不带协议名，创建webHooks和重定向; 如果主机名与仓库设置的` OAuth2 应用程序 > 重定向 URI`不一致,则授权页面报错
+      - DRONE_RPC_SECRET=${DRONE_RPC_SECRET} # 与 drone runner 通讯的密钥,32位随机字串
+      - DRONE_USER_CREATE=${DRONE_USER_CREATE} # 创建一个管理员账号，该账号需要在Gitea中注册好。https://docs.drone.io/server/reference/drone-user-create/
 #      - DRONE_DATABASE_DRIVER=postgres # 数据库类型
 #      - DRONE_DATABASE_DATASOURCE=postgres://username:password@db/db_name?sslmode=disable # 数据库连接
-      - DRONE_DATABASE_DRIVER=mysql # 数据库类型
+      # 这里选择使用外部数据库,方便保存和观察数据
+      - DRONE_DATABASE_DRIVER=${DRONE_DATABASE_DRIVER} # 数据库类型
       # 数据库账号非管理员时报错`{"error":"Error 1419: You do not have the SUPER privilege and binary logging is enabled (you *might* want to use the less safe log_bin_trust_function_creators variable)","level":"fatal","msg":"main: cannot initialize server","time":"2022-10-05T01:49:42Z"}`
 #      - DRONE_DATABASE_DATASOURCE=drone:drone123@tcp(host.docker.internal:3306)/drone?parseTime=true # 数据库连接
-      - DRONE_DATABASE_DATASOURCE=root:devdev2020@tcp(host.docker.internal:3306)/drone?parseTime=true # 数据库连接
+      - DRONE_DATABASE_DATASOURCE=${DRONE_DATABASE_DATASOURCE} # 数据库连接
       - DRONE_GIT_ALWAYS_AUTH=true # 使用 oauth 身份验证信息拉取代码
-#      - DRONE_GITEA_SERVER=http://gitea.tt # 协议名不能缺省
-#      - DRONE_GITEA_CLIENT_ID=a8b4283d-4074-443f-86c6-c7c9f94084c5 # GITEA 客户端 id
-#      - DRONE_GITEA_CLIENT_SECRET=gto_d75dzbm5shx2ofaykyib7shyxbbogpbubbh6bxwiz3oyl3hmbg5a # GITEE 客户端 密钥
-      - DRONE_GITEA_SERVER=http://gitea.waacoo.cc # 协议名不能缺省
-      - DRONE_GITEA_CLIENT_ID=0774e390-5253-4b09-b239-17e62031f3fb # GITEA 客户端 id
-      - DRONE_GITEA_CLIENT_SECRET=gto_zdcw6uxsm2jcx2g7jt46ro2ftqsiqxzn65ufp2kcdxheskvtijpq # GITEE 客户端 密钥
-#      - DRONE_GITEA_SKIP_VERIFY=false # 禁用 GITEA 链接时 tls 验证
-#      - DRONE_GITEE_CLIENT_ID=a8b4283d-4074-443f-86c6-c7c9f94084c5 # GITEE 客户端 id
-#      - DRONE_GITEE_CLIENT_SECRET=gto_erbeg2ej7e7vose6p4ryk2t6whe5go5wyhulavvmazlqzebwtwsa # GITEE 客户端 密钥
-#      - DRONE_GITEE_SKIP_VERIFY=false # 禁用 GITEE 链接时 tls 验证
+      - DRONE_GITEA_SERVER=${DRONE_GITEA_SERVER} # GITEA 服务端 url; 协议名不能缺省
+      - DRONE_GITEA_CLIENT_ID=${DRONE_GITEA_CLIENT_ID} # GITEA 客户端 id
+      - DRONE_GITEA_CLIENT_SECRET=${DRONE_GITEA_CLIENT_SECRET} # GITEA 客户端 密钥
     volumes:
       - ~/app/vol/drone/server:/data
       - /var/run/docker.sock:/var/run/docker.sock
@@ -65,7 +57,7 @@ services:
 
   # Drone Docker Runner
   runner:
-    image: drone/drone-runner-docker:latest # 目前drone-runner-docker最新版本为 1.8.0
+    image: drone/drone-runner-docker:1.8
     container_name: drone_runner
 #    restart: always
     networks:
@@ -78,9 +70,9 @@ services:
       - DRONE_RPC_PROTO=http # 访问drone server 协议
 #      - DRONE_RPC_HOST=drone.tt # 访问drone server 服务器地址
       - DRONE_RPC_HOST=drone_server # 访问drone server 服务器地址
-      - DRONE_RPC_SECRET=b4fbca0826072158fef1fecc8221ad03 # 与 drone server 通讯的密钥
-      - DRONE_UI_USERNAME=username # Drone Runner 的 UI 用户账号
-      - DRONE_UI_PASSWORD=password # Drone Runner 的 UI 用户密码
+      - DRONE_RPC_SECRET=${DRONE_RPC_SECRET} # 与 drone server 通讯的密钥
+      - DRONE_UI_USERNAME=${DRONE_UI_USERNAME} # Drone Runner 的 UI 用户账号
+      - DRONE_UI_PASSWORD=${DRONE_UI_PASSWORD} # Drone Runner 的 UI 用户密码
       # - DRONE_RUNNER_NETWORKS=drone_net
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock

@@ -1,0 +1,8 @@
+dist/
+.idea/
+
+.env
+helloci
+goci
+*.out
+
